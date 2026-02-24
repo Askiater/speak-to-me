@@ -1,0 +1,84 @@
+services:
+  mongodb:
+    image: mongo:7
+    container_name: speak-to-me-mongodb
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+    networks:
+      - speak-to-me-network
+
+  postgres:
+    image: postgres:16
+    container_name: speak-to-me-postgres
+    environment:
+      POSTGRES_DB: speak_to_me
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - speak-to-me-network
+
+  coturn:
+    image: coturn/coturn:latest
+    container_name: speak-to-me-coturn
+    ports:
+      - "3478:3478"
+      - "3478:3478/udp"
+      - "5349:5349"
+      - "5349:5349/udp"
+      - "49152-65535:49152-65535/udp"
+    volumes:
+      - ./coturn/turnserver.conf:/etc/coturn/turnserver.conf
+    command: -c /etc/coturn/turnserver.conf
+    networks:
+      - speak-to-me-network
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: speak-to-me-backend
+    ports:
+      - "3001:3001"
+    env_file:
+      - .env
+    depends_on:
+      - mongodb
+      - postgres
+      - coturn
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+    networks:
+      - speak-to-me-network
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: speak-to-me-frontend
+    ports:
+      - "3000:3000"
+    env_file:
+      - .env
+    depends_on:
+      - backend
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+      - /app/.next
+    networks:
+      - speak-to-me-network
+
+volumes:
+  mongodb_data:
+  postgres_data:
+
+networks:
+  speak-to-me-network:
+    driver: bridge
