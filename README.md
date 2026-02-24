@@ -72,11 +72,25 @@ JWT_SECRET=your_jwt_secret_key_here
 
 ### 3. Run with Docker
 
+#### Option A: With coturn (Full setup)
+
 Start all services (frontend, backend, MongoDB, PostgreSQL, coturn):
 
 ```bash
 docker-compose up -d
 ```
+
+**Windows Users:** If you get a port binding error for coturn, see the [Windows Port Issues](#windows-port-issues) section below.
+
+#### Option B: Without coturn (Recommended for local development)
+
+For local development, you can skip coturn and use Google's public STUN servers:
+
+```bash
+docker-compose -f docker-compose.dev.yml up -d
+```
+
+This setup works fine for local testing. TURN server is only needed for production or testing behind strict NATs.
 
 The application will be available at:
 - Frontend: http://localhost:3000
@@ -245,6 +259,64 @@ speak-to-me/
 4. **Database**: Use strong database passwords and restrict access
 5. **CORS**: Configure CORS properly for your domain
 6. **Rate Limiting**: Add rate limiting for API endpoints (not included in this version)
+
+## Troubleshooting
+
+### Windows Port Issues
+
+If you encounter a port binding error like:
+
+```
+Error: ports are not available: exposing port UDP ... bind: An attempt was made to access a socket in a way forbidden by its access permissions.
+```
+
+This happens because Windows reserves certain UDP ports. Here are your options:
+
+#### Solution 1: Use dev mode without coturn (Recommended)
+
+```bash
+docker-compose -f docker-compose.dev.yml up -d
+```
+
+This skips coturn and uses Google's public STUN servers, which works fine for local testing.
+
+#### Solution 2: Check which ports are reserved
+
+Run the PowerShell script to see reserved ports:
+
+```powershell
+.\check-ports.ps1
+```
+
+#### Solution 3: Reduce Windows reserved port range (Requires Admin)
+
+Open PowerShell as Administrator and run:
+
+```powershell
+netsh int ipv4 set dynamic udp start=49152 num=16384
+```
+
+Then restart your computer.
+
+#### Solution 4: Try the reduced port range
+
+The `docker-compose.yml` is already configured with a reduced port range (49160-49200) instead of the full range. Try:
+
+```bash
+docker-compose down
+docker-compose up -d
+```
+
+If it still fails, use Solution 1 (dev mode).
+
+### Connection Issues
+
+If video calls aren't connecting:
+
+1. **Check firewall**: Ensure ports 3000 and 3001 are not blocked
+2. **Use HTTPS in production**: WebRTC requires HTTPS for getUserMedia() in production
+3. **Check browser permissions**: Allow camera and microphone access
+4. **Network restrictions**: Some corporate networks block WebRTC; TURN server helps with this
 
 ## Future Enhancements
 

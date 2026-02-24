@@ -1,3 +1,5 @@
+version: '3.8'
+
 services:
   mongodb:
     image: mongo:7
@@ -23,23 +25,6 @@ services:
     networks:
       - speak-to-me-network
 
-  coturn:
-    image: coturn/coturn:latest
-    container_name: speak-to-me-coturn
-    ports:
-      - "3478:3478"
-      - "3478:3478/udp"
-      - "5349:5349"
-      - "5349:5349/udp"
-      # Reduced port range to avoid Windows reserved ports
-      - "49160-49200:49160-49200/udp"
-    volumes:
-      - ./coturn/turnserver.conf:/etc/coturn/turnserver.conf
-    command: -c /etc/coturn/turnserver.conf
-    networks:
-      - speak-to-me-network
-    restart: unless-stopped
-
   backend:
     build:
       context: ./backend
@@ -52,7 +37,6 @@ services:
     depends_on:
       - mongodb
       - postgres
-      - coturn
     volumes:
       - ./backend:/app
       - /app/node_modules
