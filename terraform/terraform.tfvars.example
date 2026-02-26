@@ -1,0 +1,20 @@
+# AWS Configuration
+aws_region   = "us-east-1"
+project_name = "speak-to-me"
+
+# Database Configuration
+postgres_db_name  = "speak_to_me"
+postgres_username = "postgres"
+postgres_password = "change_me_secure_password_123"
+
+# Application Secrets
+jwt_secret     = "change_me_jwt_secret_key_here"
+admin_username = "admin"
+admin_password = "change_me_admin_password"
+
+# TURN Server
+turn_username = "turn_user"
+turn_password = "change_me_turn_password"
+
+# EC2 SSH Key (create this in AWS Console first)
+ec2_key_name = "your-ec2-key-name"
